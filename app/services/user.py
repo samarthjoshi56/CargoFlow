@@ -5,13 +5,20 @@ from app.models.user import User
 from app.schemas.user import UserCreate
 
 
-def list_users(db: Session, name: str | None = None) -> list[User]:
+def list_users(
+    db: Session,
+    name: str | None = None,
+    skip: int = 0,
+    limit: int = 20,
+) -> list[User]:
     statement = select(User).order_by(User.id)
 
     if name:
         search = name.strip()
-        statement = statement.where(User.name.ilike(f"%{search}%"))
+        if search:
+            statement = statement.where(User.name.ilike(f"%{search}%"))
 
+    statement = statement.offset(skip).limit(limit)
     return list(db.scalars(statement).all())
 
 
