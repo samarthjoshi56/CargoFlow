@@ -63,3 +63,46 @@ def test_list_users_returns_users_in_id_order(client) -> None:
 
     assert response.status_code == 200
     assert [user["name"] for user in response.json()] == ["First User", "Second User"]
+
+
+def test_list_users_supports_pagination(client) -> None:
+    for index in range(1, 4):
+        client.post(
+            "/users",
+            json={
+                "name": f"User {index}",
+                "email": f"user{index}@example.com",
+            },
+        )
+
+    first_page = client.get("/users", params={"skip": 0, "limit": 2})
+    second_page = client.get("/users", params={"skip": 2, "limit": 2})
+
+    assert first_page.status_code == 200
+    assert [user["name"] for user in first_page.json()] == ["User 1", "User 2"]
+    assert second_page.status_code == 200
+    assert [user["name"] for user in second_page.json()] == ["User 3"]
+
+
+def test_list_users_combines_name_filter_and_pagination(client) -> None:
+    for name, email in [
+        ("Ada Lovelace", "ada@example.com"),
+        ("Grace Hopper", "grace@example.com"),
+        ("Ada Byron", "byron@example.com"),
+    ]:
+        client.post("/users", json={"name": name, "email": email})
+
+    response = client.get("/users", params={"name": "Ada", "skip": 1, "limit": 1})
+
+    assert response.status_code == 200
+    assert [user["name"] for user in response.json()] == ["Ada Byron"]
+
+
+def test_list_users_rejects_invalid_pagination_parameters(client) -> None:
+    negative_skip = client.get("/users", params={"skip": -1})
+    zero_limit = client.get("/users", params={"limit": 0})
+    excessive_limit = client.get("/users", params={"limit": 101})
+
+    assert negative_skip.status_code == 422
+    assert zero_limit.status_code == 422
+    assert excessive_limit.status_code == 422

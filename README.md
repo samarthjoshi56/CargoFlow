@@ -40,6 +40,7 @@ As CargoFlow grows, domain modules such as cargo, vessels, yard, movements, and 
 - SQLite for local development
 - Alembic database migrations
 - User creation and search
+- Paginated user listing with a bounded page size
 - Duplicate-email validation
 - Password hashing with Argon2
 - JWT access-token authentication
@@ -131,7 +132,7 @@ The API is available at http://127.0.0.1:8000 (version 0.6.0).
 
 - GET / — API status
 - GET /health — health check
-- GET /users — list users, optionally filter with ?name=...
+- GET /users — list users with optional name, skip, and limit query parameters
 - GET /users/{user_id} — get a user
 - POST /users — create a user
 - POST /auth/register — register a user
